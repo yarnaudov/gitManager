@@ -6,8 +6,10 @@
     $password = '123456';
 
     # get all git projects
-    $git_projects = shell_exec('find ./ -type d -name ".git";');
-    $git_projects = explode("/.git", $git_projects);
+    if(@$_SESSION['logged_in'] == TRUE){
+        $git_projects = shell_exec('find ./ -type d -name ".git";');
+        $git_projects = explode("/.git", $git_projects);
+    }
 
     # login user
     if(isset($_POST['password'])){
