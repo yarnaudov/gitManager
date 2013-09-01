@@ -6,8 +6,10 @@
     $password = '123456';
 
     # get all git projects
-    $git_projects = shell_exec('find ./ -type d -name ".git";');
-    $git_projects = explode("/.git", $git_projects);
+    if(@$_SESSION['logged_in'] == TRUE){
+        $git_projects = shell_exec('find ./ -type d -name ".git";');
+        $git_projects = explode("/.git", $git_projects);
+    }
 
     # login user
     if(isset($_POST['password'])){
@@ -139,9 +141,9 @@
     <head>
         <title>Git Repositories Manager</title>
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.0/jquery.min.js"></script>
-        <script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-modal.js" ></script>
-        <script src="http://twitter.github.com/bootstrap/assets/js/bootstrap-button.js" ></script>
-        <link href="http://twitter.github.com/bootstrap/assets/css/bootstrap.css" rel="stylesheet">
+        <script src="http://twitter.github.com/bootstrap/2.3.2/assets/js/bootstrap-modal.js" ></script>
+        <script src="http://twitter.github.com/bootstrap/2.3.2/assets/js/bootstrap-button.js" ></script>
+        <link href="http://twitter.github.com/bootstrap/2.3.2/assets/css/bootstrap.css" rel="stylesheet">
 
         <style>
 
