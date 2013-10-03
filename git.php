@@ -383,7 +383,7 @@
                 $('#repo_info .actions').html('');
 
                 $('#repo_info').addClass('loading');
-
+                $('#repo_info .info_branches').html('Loading please wait...');
 
                 $.get('git.php', {action: 'info',repo: repo}, function(data){
                 
@@ -444,7 +444,7 @@
                     });
 
                     // add fetch branches button 
-                    $('#repo_info .actions').append('<button id="fetch" class="btn btn-danger btn-small" data-loading-text="Switching..." >Fetch remote branches</button>');
+                    $('#repo_info .actions').append('<br/><br/><button id="fetch" class="btn btn-info btn-small" data-loading-text="Fetching branches..." >Fetch remote branches</button>');
                     $('#fetch').on('click', function(){
               			
                         $(this).button('loading');
