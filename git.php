@@ -127,6 +127,18 @@
 
             break;
 
+            #fetch remote branches
+            case 'fetch':
+
+                $cd = 'cd '.$_REQUEST['repo'].';';
+                $cmd = 'git fetch;';
+
+                echo $date." - ".$cmd."<br/>";
+                echo $date." - ".nl2br(shell_exec($cd.$cmd ));
+                echo $date." - "."done<br/><br/>"; 
+
+            break;
+        
         }
 
         exit;
@@ -431,6 +443,21 @@
 	              	
                     });
 
+                    // add fetch branches button 
+                    $('#repo_info .actions').append('<button id="fetch" class="btn btn-danger btn-small" data-loading-text="Switching..." >Fetch remote branches</button>');
+                    $('#fetch').on('click', function(){
+              			
+                        $(this).button('loading');
+              			
+                        $.get('git.php', {action: 'fetch', repo: repo}, function(data){
+		              		
+                            $('#fetch').button('reset');
+                            $('#output').html($('#output').html()+data).trigger('change');
+                            $('#projects').trigger('change');
+		              	    
+                        });
+	              	
+                    });
 
                 });
 
