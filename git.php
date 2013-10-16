@@ -138,6 +138,22 @@
                 echo $date." - "."done<br/><br/>"; 
 
             break;
+			
+			# exec custom command
+			case 'custom_command':
+			
+				$cd = '';
+				if(isset($_REQUEST['repo'])){
+					$cd = 'cd '.$_REQUEST['repo'].';';
+				}
+				
+				$cmd = $_REQUEST['command'];
+
+				echo $date." - ".$cmd."<br/>";
+				echo $date." - ".nl2br(shell_exec($cd.$cmd ));
+				echo $date." - "."done<br/><br/>"; 
+			
+			break;
         
         }
 
@@ -192,8 +208,12 @@
             }
             #output_main #header{
                     background-color: #eee;
-                    padding: 2px 10px;
+                    padding: 5px 5px 5px 10px;
+					overflow: auto;
             }
+			#output_main #header .input-append{
+					margin-bottom: 0 !important;
+			}
             #main_content{
                     padding: 0 30px;
             }
@@ -239,6 +259,10 @@
                     overflow: auto; 
                     height: 220px;
             }
+			
+			.input-xlarge{
+				padding: 2px 5px !important;
+			}
 
         </style>
 
@@ -334,7 +358,13 @@
 
 
         <div id="output_main">
-            <div id="header" >Commands Output</div>
+            <div id="header" >
+				<div class="pull-left" >Commands Output</div>
+				<div class="input-append pull-right">
+					<input class="input-xlarge" id="custom_command" type="text" >
+					<button class="btn btn-small" type="button" id="exec_custom_command" >Exec</button>
+				</div>
+			</div>
             <div id="output" ></div>
         </div>
 
@@ -462,6 +492,28 @@
                 });
 
             });
+		
+		$('#exec_custom_command').on('click', function(){
+			
+			var cmd = $('#custom_command').val();
+			
+			if(cmd == ""){
+				return;
+			}
+			
+			$.get('git.php', {action: 'custom_command', repo: repo, command: cmd}, function(data){
+			
+				$('#output').html($('#output').html()+data).trigger('change');
+			
+			});
+			
+		});
+		
+		$('#custom_command').on('keyup', function(e){
+			if(e.keyCode == 13){
+				$('#exec_custom_command').trigger('click');
+			}
+		});
 		
             $('#output').on('change', function(){
                 $(this).scrollTop(1000000);
