@@ -3,7 +3,7 @@
     session_start();
 
     # password to use for login
-    $password = '123456';
+    $password = 'e10adc3949ba59abbe56e057f20f883e';
 
     # get all git projects
     if(@$_SESSION['logged_in'] == TRUE){
@@ -14,7 +14,7 @@
     # login user
     if(isset($_POST['password'])){
 
-        if($_POST['password'] === $password){
+        if(md5($_POST['password']) === $password){
             $_SESSION['logged_in'] = TRUE;
             header('location: git.php');
         }
@@ -62,7 +62,7 @@
                 $repo_data['info'] .= nl2br($repo_info)."<br/>";
 
                 $repo_data['output'] .= $date." - git remote show origin<br/>";
-                $repo_data['output'] .= $date." - ".nl2br($repo_info);
+                $repo_data['output'] .= $date." - ".nl2br($repo_info)."<br/>";
                 $repo_data['output'] .= $date." - "."done<br/><br/>";
 
                 echo json_encode($repo_data);
@@ -81,7 +81,7 @@
                 $cmd = 'git pull origin '.$branch.';';
 
                 echo $date." - ".$cmd."<br/>";
-                echo $date." - ".nl2br(shell_exec($cd.$cmd ));
+                echo $date." - ".nl2br(shell_exec($cd.$cmd ))."<br/>";
                 echo $date." - "."done<br/><br/>"; 
 
             break;
@@ -134,7 +134,7 @@
                 $cmd = 'git fetch;';
 
                 echo $date." - ".$cmd."<br/>";
-                echo $date." - ".nl2br(shell_exec($cd.$cmd ));
+                echo $date." - ".nl2br(shell_exec($cd.$cmd ))."<br/>";
                 echo $date." - "."done<br/><br/>"; 
 
             break;
@@ -149,9 +149,30 @@
 				
 				$cmd = $_REQUEST['command'];
 
-				echo $date." - ".$cmd."<br/>";
-				echo $date." - ".nl2br(shell_exec($cd.$cmd ));
-				echo $date." - "."done<br/><br/>"; 
+				if(preg_match('/(vi |cat |more )(.*)/', $cmd)){
+				
+					$file['name'] = preg_replace('/(cd )/', '', $cd).'/'.preg_replace('/(vi |cat |more |cd )/', '', $cmd);
+					$file['name'] = preg_replace('/;/', '/', $file['name']);
+					$file['name'] = preg_replace('/^(\/)+/', '', $file['name']);
+					
+					$file['data'] = shell_exec($cd.$cmd);
+					echo json_encode($file);
+				}
+				else{
+					echo $date." - ".$cmd."<br/>";
+					echo $date." - ".nl2br(shell_exec($cd.$cmd ))."<br/>";
+					echo $date." - "."done<br/><br/>"; 
+				}
+			
+			break;
+			
+			# save file
+			case 'save_file':
+			
+				$name = $_REQUEST['name'];
+				$data = $_REQUEST['data'];
+				
+				echo file_put_contents($name, $data);
 			
 			break;
         
@@ -167,11 +188,14 @@
 <html>
 
     <head>
+	
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8;" />
         <title>Git Repositories Manager</title>
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.0/jquery.min.js"></script>
         <script src="http://getbootstrap.com/2.3.2/assets/js/bootstrap-modal.js" ></script>
         <script src="http://getbootstrap.com/2.3.2/assets/js/bootstrap-button.js" ></script>
         <link href="http://getbootstrap.com/2.3.2/assets/css/bootstrap.css" rel="stylesheet">
+		<script src="http://ace.c9.io/build/src-min-noconflict/ace.js"></script>
 
         <style>
 
@@ -260,8 +284,25 @@
                     height: 220px;
             }
 			
-			.input-xlarge{
+			.input-xxlarge{
 				padding: 2px 5px !important;
+			}
+			
+			#ModalEditFile{
+				width: 800px;
+				margin-left: -400px;
+				
+			}
+			#ModalEditFile .modal-body{
+				height: 600px;
+			}
+			
+			#editor { 
+				position: absolute;
+				top: 0;
+				right: 0;
+				bottom: 0;
+				left: 0;
 			}
 
         </style>
@@ -356,12 +397,28 @@
             </div>
         </div>
 
+		<!-- Modal Edit File-->
+		<div id="ModalEditFile" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="Edit file" aria-hidden="true">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
+                <h3 id="myModalLabel">Edit file</h3>
+				<span id="file_name" ></span>
+				<span id="message" ></span>
+            </div>
+            <div class="modal-body">				
+                <div id="editor"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+                <button class="btn btn-primary" id="saveFileBtn" >Save</button>
+            </div>
+        </div>
 
         <div id="output_main">
             <div id="header" >
 				<div class="pull-left" >Commands Output</div>
 				<div class="input-append pull-right">
-					<input class="input-xlarge" id="custom_command" type="text" >
+					<input class="input-xxlarge" id="custom_command" type="text" >
 					<button class="btn btn-small" type="button" id="exec_custom_command" >Exec</button>
 				</div>
 			</div>
@@ -493,27 +550,66 @@
 
             });
 		
-		$('#exec_custom_command').on('click', function(){
-			
-			var cmd = $('#custom_command').val();
-			
-			if(cmd == ""){
-				return;
-			}
-			
-			$.get('git.php', {action: 'custom_command', repo: repo, command: cmd}, function(data){
-			
-				$('#output').html($('#output').html()+data).trigger('change');
-			
+			// exec custom commands
+			var editor = ace.edit('editor');
+			editor.setTheme('ace/theme/monokai');			
+			$('#exec_custom_command').on('click', function(){
+				
+				var cmd = $('#custom_command').val();
+				
+				if(cmd == ""){
+					return;
+				}
+				
+				$.get('git.php', {action: 'custom_command', repo: repo, command: cmd}, function(data){
+					
+					try{		
+						var file = $.parseJSON(data);
+						$('#file_name').html(file['name']);
+						editor.setValue(file['data'], -1);
+						
+						var mode = cmd.split('.');
+						mode = mode[mode.length-1];
+						if(mode == 'js'){ mode = 'javascript'; }
+						
+						editor.getSession().setMode('ace/mode/'+mode);
+						
+						$('#message').html('');
+						$('#ModalEditFile').modal('show');					
+					
+					}catch(err){
+						console.log('here!!!!!!');
+						$('#output').html($('#output').html()+data).trigger('change');
+					}
+				
+				});
+				
 			});
 			
-		});
-		
-		$('#custom_command').on('keyup', function(e){
-			if(e.keyCode == 13){
-				$('#exec_custom_command').trigger('click');
-			}
-		});
+			$('#saveFileBtn').on('click', function(){
+			
+				var name = $('#file_name').html();
+				var data = editor.getValue();
+				
+				$.post('git.php', {action: 'save_file', name: name, data: data}, function(data){
+					console.log(data);
+					if(data > 0){
+						$('#message').html('&nbsp;-&nbsp;<span class="alert-success" >File successfully saved!</span>');
+						//console.log('File saved!');
+					}
+					else{
+						$('#message').html('&nbsp;-&nbsp;<span class="alert-error" >File could not be saved!</span>');
+						//console.log('Error!');
+					}
+				});
+				
+			});
+			
+			$('#custom_command').on('keyup', function(e){
+				if(e.keyCode == 13){
+					$('#exec_custom_command').trigger('click');
+				}
+			});
 		
             $('#output').on('change', function(){
                 $(this).scrollTop(1000000);
