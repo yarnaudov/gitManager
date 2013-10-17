@@ -189,8 +189,11 @@
 
     <head>
 	
-		<meta http-equiv="Content-Type" content="text/html; charset=utf-8;" />
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8;" />
         <title>Git Repositories Manager</title>
+		
+	<link href='http://git-scm.com/favicon.png' rel='shortcut icon' type='image/png'>
+		
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.0/jquery.min.js"></script>
         <script src="http://getbootstrap.com/2.3.2/assets/js/bootstrap-modal.js" ></script>
         <script src="http://getbootstrap.com/2.3.2/assets/js/bootstrap-button.js" ></script>
