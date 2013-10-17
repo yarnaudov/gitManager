@@ -154,6 +154,7 @@
 					$file['name'] = preg_replace('/(cd )/', '', $cd).'/'.preg_replace('/(vi |cat |more |cd )/', '', $cmd);
 					$file['name'] = preg_replace('/;/', '/', $file['name']);
 					$file['name'] = preg_replace('/^(\/)+/', '', $file['name']);
+					$file['name'] = realpath($file['name']);
 					
 					$file['data'] = shell_exec($cd.$cmd);
 					echo json_encode($file);
@@ -289,6 +290,7 @@
 			
 			.input-xxlarge{
 				padding: 2px 5px !important;
+				width: 600px;
 			}
 			
 			#ModalEditFile{
@@ -314,7 +316,7 @@
 
     <body>
 
-        <?php if(@$_SESSION['logged_in'] != TRUE){ ?>
+        <?php if(!isset($_SESSION['logged_in']) && $_SESSION['logged_in'] != TRUE){ ?>
 
         <!-- Modal Dialog Log in -->
         <div id="LogInModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -360,13 +362,13 @@
 
             <div id="repo_list">
                 <select id="projects" size="10" >
-                    <?php foreach($git_projects as $git_project){ 
+                    <?php $prev_git_project = '###none###';
+                          foreach($git_projects as $git_project){ 
                             $git_project = trim($git_project);
-                            if(empty($git_project)){
-                                continue;
-                            } ?>
-                    <option value="<?php echo $git_project; ?>" ><?php echo $git_project; ?></option>
-                    <?php } ?>
+                            if(empty($git_project)){ continue;}
+                            $git_project_text = preg_replace('/^'.$prev_git_project.'/', '&nbsp;&nbsp; - ', $git_project); ?>
+                    <option value="<?php echo $git_project; ?>" ><?php echo $git_project_text; ?></option>
+                    <?php $prev_git_project = str_replace("/", "\/", $git_project); } ?>
                 </select>
                 <label>Git repositories</label>
             </div>
@@ -554,6 +556,8 @@
             });
 		
 			// exec custom commands
+			var cmd_history = new Array();
+			var current_cmd;
 			var editor = ace.edit('editor');
 			editor.setTheme('ace/theme/monokai');			
 			$('#exec_custom_command').on('click', function(){
@@ -564,7 +568,18 @@
 					return;
 				}
 				
+				for(var i in cmd_history){
+					if(cmd_history[i] == cmd){
+						cmd_history.splice(i, 1);
+					}
+				}
+				
+				cmd_history.unshift(cmd);
+				current_cmd = -1;
+				
 				$.get('git.php', {action: 'custom_command', repo: repo, command: cmd}, function(data){
+					
+					$('#custom_command').val('');
 					
 					try{		
 						var file = $.parseJSON(data);
@@ -581,7 +596,6 @@
 						$('#ModalEditFile').modal('show');					
 					
 					}catch(err){
-						console.log('here!!!!!!');
 						$('#output').html($('#output').html()+data).trigger('change');
 					}
 				
@@ -594,15 +608,15 @@
 				var name = $('#file_name').html();
 				var data = editor.getValue();
 				
+				$('#message').html('');
+				
 				$.post('git.php', {action: 'save_file', name: name, data: data}, function(data){
-					console.log(data);
+					
 					if(data > 0){
-						$('#message').html('&nbsp;-&nbsp;<span class="alert-success" >File successfully saved!</span>');
-						//console.log('File saved!');
+						$('#message').html('&nbsp;-&nbsp;<span class="alert-success" >File successfully saved!</span>');					
 					}
 					else{
-						$('#message').html('&nbsp;-&nbsp;<span class="alert-error" >File could not be saved!</span>');
-						//console.log('Error!');
+						$('#message').html('&nbsp;-&nbsp;<span class="alert-error" >File could not be saved!</span>');						
 					}
 				});
 				
@@ -611,6 +625,22 @@
 			$('#custom_command').on('keyup', function(e){
 				if(e.keyCode == 13){
 					$('#exec_custom_command').trigger('click');
+				}
+				else if(e.keyCode == 38){					
+					if(cmd_history[current_cmd+1]){
+						current_cmd++;
+						$('#custom_command').val(cmd_history[current_cmd]);
+					}
+				}
+				else if(e.keyCode == 40){					
+					if(cmd_history[current_cmd-1]){
+						current_cmd--;			
+						$('#custom_command').val(cmd_history[current_cmd]);
+					}
+					else{
+						current_cmd = -1;
+						$('#custom_command').val('');
+					}
 				}
 			});
 		
