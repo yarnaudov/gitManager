@@ -421,12 +421,12 @@
 
         <div id="output_main">
             <div id="header" >
-				<div class="pull-left" >Commands Output</div>
-				<div class="input-append pull-right">
-					<input class="input-xxlarge" id="custom_command" type="text" >
-					<button class="btn btn-small" type="button" id="exec_custom_command" >Exec</button>
-				</div>
-			</div>
+							<div class="pull-left" >Commands Output</div>
+							<div class="input-append pull-right">
+								<input class="input-xxlarge" id="custom_command" type="text" >
+								<button class="btn btn-small" type="button" id="exec_custom_command" >Exec</button>
+							</div>
+						</div>
             <div id="output" ></div>
         </div>
 
