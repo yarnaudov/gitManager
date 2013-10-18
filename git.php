@@ -28,31 +28,31 @@
     # actions
     if(isset($_REQUEST['action'])){
 
-        $date = date('Y-m-d H:i:s');
-
         switch($_REQUEST['action']){
 
             #create repository
             case 'create_repo':
 
                 $cmd = 'git clone '.$_REQUEST['repo_url'].' '.$_REQUEST['repo_name'];
-                echo $date." - ".$cmd."<br/>";
-                echo $date." - ".shell_exec($cmd)."<br/>";
-                echo $date." - "."done<br/><br/>";
+                echo date('Y-m-d H:i:s')." - ".$cmd."<br/>";
+                echo date('Y-m-d H:i:s')." - ".nl2br(shell_exec($cmd));
+                echo date('Y-m-d H:i:s')." - "."done<br/><br/>";
 
             break;
 
             #get repository info
             case 'info':
 
+				setcookie('path', '');
+			
                 $cd  = 'cd '.$_REQUEST['repo'].';';
                 $cmd = 'git branch -a;';
 
                 $branches = shell_exec($cd.$cmd );
 
-                $repo_data['output']  = '';//$date." - ".$cd."<br/>";
-                $repo_data['output'] .= $date." - ".$cmd."<br/>";
-                $repo_data['output'] .= $date." - ".$branches."<br/>";
+                $repo_data['output']  = '';//date('Y-m-d H:i:s')." - ".$cd."<br/>";
+                $repo_data['output'] .= date('Y-m-d H:i:s')." - ".$cmd."<br/>";
+                $repo_data['output'] .= date('Y-m-d H:i:s')." - ".$branches."<br/>";
 
                 $repo_data['branches'] = explode("\n", $branches);
 
@@ -61,9 +61,9 @@
                 $repo_info = shell_exec($cd.'git remote show origin');
                 $repo_data['info'] .= nl2br($repo_info)."<br/>";
 
-                $repo_data['output'] .= $date." - git remote show origin<br/>";
-                $repo_data['output'] .= $date." - ".nl2br($repo_info)."<br/>";
-                $repo_data['output'] .= $date." - "."done<br/><br/>";
+                $repo_data['output'] .= date('Y-m-d H:i:s')." - git remote show origin<br/>";
+                $repo_data['output'] .= date('Y-m-d H:i:s')." - ".nl2br($repo_info);
+                $repo_data['output'] .= date('Y-m-d H:i:s')." - "."done<br/><br/>";
 
                 echo json_encode($repo_data);
 
@@ -80,9 +80,9 @@
 
                 $cmd = 'git pull origin '.$branch.';';
 
-                echo $date." - ".$cmd."<br/>";
-                echo $date." - ".nl2br(shell_exec($cd.$cmd ))."<br/>";
-                echo $date." - "."done<br/><br/>"; 
+                echo date('Y-m-d H:i:s')." - ".$cmd."<br/>";
+                echo date('Y-m-d H:i:s')." - ".nl2br(shell_exec($cd.$cmd ));
+                echo date('Y-m-d H:i:s')." - "."done<br/><br/>"; 
 
             break;
 
@@ -115,15 +115,15 @@
                     $cmd = 'git checkout -b '.$branch.';';
                 }
 
-                echo $date." - ".$cmd."<br/>";
+                echo date('Y-m-d H:i:s')." - ".$cmd."<br/>";
 
                 $output = trim(shell_exec($cd.$cmd));
 
                 if(!empty($output)){
-                    echo $date." - ".nl2br($output)."<br/>";
+                    echo date('Y-m-d H:i:s')." - ".nl2br($output);
                 }
 
-                echo $date." - "."done<br/><br/>";
+                echo date('Y-m-d H:i:s')." - "."done<br/><br/>";
 
             break;
 
@@ -133,9 +133,9 @@
                 $cd = 'cd '.$_REQUEST['repo'].';';
                 $cmd = 'git fetch;';
 
-                echo $date." - ".$cmd."<br/>";
-                echo $date." - ".nl2br(shell_exec($cd.$cmd ))."<br/>";
-                echo $date." - "."done<br/><br/>"; 
+                echo date('Y-m-d H:i:s')." - ".$cmd."<br/>";
+                echo date('Y-m-d H:i:s')." - ".nl2br(shell_exec($cd.$cmd ));
+                echo date('Y-m-d H:i:s')." - "."done<br/><br/>"; 
 
             break;
 			
@@ -147,7 +147,18 @@
 					$cd = 'cd '.$_REQUEST['repo'].';';
 				}
 				
+				if(isset($_COOKIE['path']) && !empty($_COOKIE['path'])){
+					$cd .= 'cd '.$_COOKIE['path'].';';
+				}
+				
 				$cmd = $_REQUEST['command'];
+				
+				preg_match('/cd (.*);|cd (.*)/', $cmd, $match);
+				if(isset($match[0])){
+					$match[0] = preg_replace('/;$/', '', $match[0]);
+					$pwd = shell_exec($cd.$match[0].';pwd;');
+					setcookie('path', trim($pwd));
+				}
 
 				if(preg_match('/(vi |cat |more )/', $cmd)){
 				
@@ -162,14 +173,14 @@
 					echo json_encode($file);
 				}
 				else{
-					echo $date." - ".$cmd."<br/>";
+					echo date('Y-m-d H:i:s')." - ".$cmd."<br/>";
 					$cmd_output = shell_exec($cd.$cmd);
 					if($cmd_output){
-						echo $date." - ".nl2br($cmd_output)."<br/>";
+						echo date('Y-m-d H:i:s')." - ".nl2br($cmd_output);
 					}
-					echo $date." - "."done<br/><br/>"; 
+					echo date('Y-m-d H:i:s')." - "."done<br/><br/>"; 
 				}
-			
+				
 			break;
 			
 			# save file
