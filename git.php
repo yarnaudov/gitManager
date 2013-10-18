@@ -149,19 +149,24 @@
 				
 				$cmd = $_REQUEST['command'];
 
-				if(preg_match('/(vi |cat |more )(.*)/', $cmd)){
+				if(preg_match('/(vi |cat |more )/', $cmd)){
 				
 					$file['name'] = preg_replace('/(cd )/', '', $cd).'/'.preg_replace('/(vi |cat |more |cd )/', '', $cmd);
 					$file['name'] = preg_replace('/;/', '/', $file['name']);
 					$file['name'] = preg_replace('/^(\/)+/', '', $file['name']);
 					$file['name'] = realpath($file['name']);
 					
+					$cmd = preg_replace('/vi /', 'cat ', $cmd);
+					
 					$file['data'] = shell_exec($cd.$cmd);
 					echo json_encode($file);
 				}
 				else{
 					echo $date." - ".$cmd."<br/>";
-					echo $date." - ".nl2br(shell_exec($cd.$cmd ))."<br/>";
+					$cmd_output = shell_exec($cd.$cmd);
+					if($cmd_output){
+						echo $date." - ".nl2br($cmd_output)."<br/>";
+					}
 					echo $date." - "."done<br/><br/>"; 
 				}
 			
@@ -198,6 +203,7 @@
         <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.0/jquery.min.js"></script>
         <script src="http://getbootstrap.com/2.3.2/assets/js/bootstrap-modal.js" ></script>
         <script src="http://getbootstrap.com/2.3.2/assets/js/bootstrap-button.js" ></script>
+		<script src="http://getbootstrap.com/2.3.2/assets/js/bootstrap-dropdown.js" ></script>
         <link href="http://getbootstrap.com/2.3.2/assets/css/bootstrap.css" rel="stylesheet">
 		<script src="http://ace.c9.io/build/src-min-noconflict/ace.js"></script>
 
@@ -237,7 +243,7 @@
             #output_main #header{
                     background-color: #eee;
                     padding: 5px 5px 5px 10px;
-					overflow: auto;
+					height: 27px;
             }
 			#output_main #header .input-append{
 					margin-bottom: 0 !important;
@@ -294,8 +300,8 @@
 			}
 			
 			#ModalEditFile{
-				width: 800px;
-				margin-left: -400px;
+				width: 1000px;
+				margin-left: -500px;
 				
 			}
 			#ModalEditFile .modal-body{
@@ -423,8 +429,14 @@
             <div id="header" >
 							<div class="pull-left" >Commands Output</div>
 							<div class="input-append pull-right">
-								<input class="input-xxlarge" id="custom_command" type="text" >
-								<button class="btn btn-small" type="button" id="exec_custom_command" >Exec</button>
+								<input class="input-xxlarge" id="custom_command" type="text" >		
+								<div class="btn-group dropup">								
+									<button class="btn btn-small" type="button" id="exec_custom_command" >Exec</button>
+									<button class="btn btn-small dropdown-toggle" data-toggle="dropdown">
+										<span class="caret"></span>
+									</button>
+									<ul class="dropdown-menu pull-right"></ul>
+								</div>
 							</div>
 						</div>
             <div id="output" ></div>
@@ -571,10 +583,12 @@
 				for(var i in cmd_history){
 					if(cmd_history[i] == cmd){
 						cmd_history.splice(i, 1);
+						$('.dropdown-menu li a[href="'+cmd+'"]').parent().remove();
 					}
 				}
 				
 				cmd_history.unshift(cmd);
+				$('.dropdown-menu').append('<li><a href="'+cmd+'" >'+cmd+'</a></li>');
 				current_cmd = -1;
 				
 				$.get('git.php', {action: 'custom_command', repo: repo, command: cmd}, function(data){
@@ -629,21 +643,26 @@
 				else if(e.keyCode == 38){					
 					if(cmd_history[current_cmd+1]){
 						current_cmd++;
-						$('#custom_command').val(cmd_history[current_cmd]);
+						$(this).val(cmd_history[current_cmd]);
 					}
 				}
 				else if(e.keyCode == 40){					
 					if(cmd_history[current_cmd-1]){
 						current_cmd--;			
-						$('#custom_command').val(cmd_history[current_cmd]);
+						$(this).val(cmd_history[current_cmd]);
 					}
 					else{
 						current_cmd = -1;
-						$('#custom_command').val('');
+						$(this).val('');
 					}
 				}
 			});
 		
+			$('.dropdown-menu').on('click', 'a', function(e){			
+				e.preventDefault();
+				$('#custom_command').val($(this).html());
+			});
+			
             $('#output').on('change', function(){
                 $(this).scrollTop(1000000);
             });
