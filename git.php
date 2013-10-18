@@ -307,7 +307,7 @@
 			#ModalEditFile .modal-body{
 				height: 600px;
 			}
-			
+
 			#editor { 
 				position: absolute;
 				top: 0;
@@ -607,7 +607,8 @@
 						editor.getSession().setMode('ace/mode/'+mode);
 						
 						$('#message').html('');
-						$('#ModalEditFile').modal('show');					
+						$('#ModalEditFile').modal('show');
+						setFullScreenModal();					
 					
 					}catch(err){
 						$('#output').html($('#output').html()+data).trigger('change');
@@ -666,7 +667,15 @@
             $('#output').on('change', function(){
                 $(this).scrollTop(1000000);
             });
-
+			
+			function setFullScreenModal(){
+				$('#ModalEditFile').css('width', '100%').css('height', '100%').css('margin', 0).css('top', 0).css('left', 0);
+				$('#ModalEditFile .modal-body').css('height', '100%').css('max-height', '100%');
+				$('#ModalEditFile .modal-body').height($('#ModalEditFile').height()-$('#ModalEditFile .modal-header').height()-$('#ModalEditFile .modal-footer').height()-80);
+			}
+			
+			$(window).resize(setFullScreenModal);
+			
         </script>
 
         <?php } ?>
