@@ -5,6 +5,11 @@
     # password to use for login
     $password = 'e10adc3949ba59abbe56e057f20f883e';
 
+    if(!isset($_REQUEST['action'])){
+        $pwd = shell_exec('pwd;');
+    	setcookie('path', trim($pwd));
+    }
+
     # get all git projects
     if(@$_SESSION['logged_in'] == TRUE){
         $git_projects = shell_exec('find ./ -type d -name ".git";');
@@ -42,15 +47,16 @@
 
             #get repository info
             case 'info':
-
-				setcookie('path', '');
 			
                 $cd  = 'cd '.$_REQUEST['repo'].';';
+                
+                $pwd = shell_exec($cd.'pwd;');
+				setcookie('path', trim($pwd));
+					
                 $cmd = 'git branch -a;';
 
                 $branches = shell_exec($cd.$cmd );
 
-                $repo_data['output']  = '';//date('Y-m-d H:i:s')." - ".$cd."<br/>";
                 $repo_data['output'] .= date('Y-m-d H:i:s')." - ".$cmd."<br/>";
                 $repo_data['output'] .= date('Y-m-d H:i:s')." - ".$branches."<br/>";
 
@@ -141,14 +147,10 @@
 			
 			# exec custom command
 			case 'custom_command':
-			
-				$cd = '';
-				if(isset($_REQUEST['repo'])){
-					$cd = 'cd '.$_REQUEST['repo'].';';
-				}
 				
+				$cd = '';
 				if(isset($_COOKIE['path']) && !empty($_COOKIE['path'])){
-					$cd .= 'cd '.$_COOKIE['path'].';';
+					$cd = 'cd '.$_COOKIE['path'].';';
 				}
 				
 				$cmd = $_REQUEST['command'];
@@ -164,8 +166,7 @@
 				
 					$file['name'] = preg_replace('/(cd )/', '', $cd).'/'.preg_replace('/(vi |cat |more |cd )/', '', $cmd);
 					$file['name'] = preg_replace('/;/', '/', $file['name']);
-					$file['name'] = preg_replace('/^(\/)+/', '', $file['name']);
-					$file['name'] = realpath($file['name']);
+					$file['name'] = preg_replace('/(\/\/)/', '/', $file['name']);
 					
 					$cmd = preg_replace('/vi /', 'cat ', $cmd);
 					
@@ -243,6 +244,7 @@
                     position: absolute;
                     bottom: 0;
                     width: 100%;
+					background-color: #fff;
             }
             #output_main #output{				
                     height: 300px;
@@ -253,8 +255,7 @@
             }
             #output_main #header{
                     background-color: #eee;
-                    padding: 5px 5px 5px 10px;
-					height: 27px;
+                    padding: 2px 10px;
             }
 			#output_main #header .input-append{
 					margin-bottom: 0 !important;
@@ -264,47 +265,51 @@
             }
             #projects{
                     width: 100%;
-                    height: 300px;
+                    height: 200px;
             }
             #repo_list{
                     float: left;
                     width: 18%;
             }
             #repo_info{
-                    float: right;
-                    border: 1px solid #cccccc;
-                    height: 300px;
-                    width: 80%;
+                float: right;
+                border: 1px solid #cccccc;
+                height: 200px;
+                width: 80%;
             }
             #repo_info.loading{
-                    background-color: #eee;
+                background-color: #eee;
             }
             #repo_info table{
-                    width: 100%;
+                width: 100%;
             }
             #repo_info table td{
-                    padding: 20px;
-                    vertical-align: top;
+                padding: 20px;
+                vertical-align: top;
             }
             #repo_info table .actions{
-                    width: 300px;
+                width: 320px;
             }
             #repo_info table .info_branches{
-                    width: 250px;
+                width: auto;
             }
             #repo_info .btn{
-                    margin: -10px 0 0 5px;
+                margin: -10px 0 0 5px;
             }
             #repo_info span{
-                    display: block;
-                    border-bottom: 1px solid #bbbbbb;
-                    margin-bottom: 10px;
+                display: block;
+                border-bottom: 1px solid #bbbbbb;
+                margin-bottom: 10px;
             }
-            #repo_info table .info div{
-                    overflow: auto; 
-                    height: 220px;
+            #repo_info table .info_branches div{
+                overflow: auto; 
+                height: 130px;
             }
 			
+			#custom_commands{
+			    background-color: #eee;
+                padding: 2px 10px;
+			}
 			.input-xxlarge{
 				padding: 2px 5px !important;
 				width: 600px;
@@ -326,6 +331,10 @@
 				bottom: 0;
 				left: 0;
 			}
+			
+			#fullscreen{
+				cursor: pointer;
+			}
 
         </style>
 
@@ -333,7 +342,7 @@
 
     <body>
 
-        <?php if(!isset($_SESSION['logged_in']) && $_SESSION['logged_in'] != TRUE){ ?>
+        <?php if(!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] != TRUE){ ?>
 
         <!-- Modal Dialog Log in -->
         <div id="LogInModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
@@ -394,7 +403,7 @@
                 <table>
                     <tr>
                         <td class="info_branches">No repository selected</td>
-                        <td class="info"></td>
+                        <!--<td class="info"></td>-->
                         <td class="actions"></td>
                     </tr>
                 </table>
@@ -438,19 +447,23 @@
 
         <div id="output_main">
             <div id="header" >
-							<div class="pull-left" >Commands Output</div>
-							<div class="input-append pull-right">
-								<input class="input-xxlarge" id="custom_command" type="text" >		
-								<div class="btn-group dropup">								
-									<button class="btn btn-small" type="button" id="exec_custom_command" >Exec</button>
-									<button class="btn btn-small dropdown-toggle" data-toggle="dropdown">
-										<span class="caret"></span>
-									</button>
-									<ul class="dropdown-menu pull-right"></ul>
-								</div>
-							</div>
-						</div>
+				Commands Output
+				<i class="icon-chevron-up pull-right" id="fullscreen"></i>
+			</div>
             <div id="output" ></div>
+            <div id="custom_commands" >
+                <div id="path" ><?php echo isset($_COOKIE['path']) ? $_COOKIE['path'] : ''; ?></div>
+                <div class="input-prepend input-append">
+                    <div class="btn-group dropup">
+                        <button class="btn btn-small dropdown-toggle" data-toggle="dropdown">
+							<span class="caret"></span>
+						</button>
+						<ul class="dropdown-menu pull-left"></ul>
+					</div>
+    				<input class="input-xxlarge" id="custom_command" type="text" >		
+					<button class="btn btn-small" type="button" id="exec_custom_command" >Exec</button>
+				</div>
+			</div>
         </div>
 
         <script type="text/javascript" >
@@ -460,12 +473,34 @@
             // automaticaly resize output conteiner
             $(window).on('resize load', function() {
 
+				setFullScreenModal();
+			
                 var body_height = $(window).height();
-                var output_height = Math.round((body_height*40)/100);
-                output_height = body_height-480;
-                $('#output').css('height', output_height);
+				
+				if($('#fullscreen').hasClass('icon-chevron-up')){
+					var output_height = body_height-430;
+					$('#output').css('height', output_height);
+				}
+				else{
+					var output_height = $('#output_main').height()-$('#header').height()-$('#custom_commands').height()-18;
+				}
+				
+				$('#output').css('height', output_height);
 
             });
+			
+			// toggle output fullscreen
+			$('#fullscreen').on('click', function(){
+				if($(this).hasClass('icon-chevron-up')){
+					$('#output_main').css('height', '100%');
+					$('#fullscreen').removeClass('icon-chevron-up').addClass('icon-chevron-down');					
+				}
+				else{
+					$('#output_main').css('height', 'auto');
+					$('#fullscreen').removeClass('icon-chevron-down').addClass('icon-chevron-up');
+				}
+				$(window).trigger('load');
+			});
 
             // create new repository
             $('#createRepoBtn').on('click', function(){
@@ -503,13 +538,13 @@
                 $.get('git.php', {action: 'info',repo: repo}, function(data){
                 
                     $('#repo_info').removeClass('loading');
-
+                    
                     data = JSON.parse(data);
 
                     $('#output').html($('#output').html()+data['output']).trigger('change');
 
-                    $('#repo_info .info_branches').html('<span>Branches</span>'+data['info_branches']);
-                    $('#repo_info .info').html('<span>Info</span><div>'+data['info']+'</div>');
+                    $('#repo_info .info_branches').html('<span>Branches</span><div>'+data['info_branches']+'</div>');
+                    //$('#repo_info .info').html('<span>Info</span><div>'+data['info']+'</div>');
 
 
                     // create list with remote branches
@@ -573,6 +608,8 @@
                         });
 	              	
                     });
+                    
+                    $('#path').html(getCookie('path'));
 
                 });
 
@@ -603,7 +640,7 @@
 				current_cmd = -1;
 				
 				$.get('git.php', {action: 'custom_command', repo: repo, command: cmd}, function(data){
-					
+					console.log(data);
 					$('#custom_command').val('');
 					
 					try{		
@@ -624,6 +661,8 @@
 					}catch(err){
 						$('#output').html($('#output').html()+data).trigger('change');
 					}
+					
+					$('#path').html(getCookie('path'));
 				
 				});
 				
@@ -685,7 +724,31 @@
 				$('#ModalEditFile .modal-body').height($('#ModalEditFile').height()-$('#ModalEditFile .modal-header').height()-$('#ModalEditFile .modal-footer').height()-80);
 			}
 			
-			$(window).resize(setFullScreenModal);
+			function getCookie(c_name){
+			
+                var c_value = document.cookie;
+                var c_start = c_value.indexOf(" " + c_name + "=");
+                if (c_start == -1)
+                  {
+                  c_start = c_value.indexOf(c_name + "=");
+                  }
+                if (c_start == -1)
+                  {
+                  c_value = null;
+                  }
+                else
+                  {
+                  c_start = c_value.indexOf("=", c_start) + 1;
+                  var c_end = c_value.indexOf(";", c_start);
+                  if (c_end == -1)
+                  {
+                c_end = c_value.length;
+                }
+                c_value = unescape(c_value.substring(c_start,c_end));
+                }
+                return c_value;
+                
+            }
 			
         </script>
 
