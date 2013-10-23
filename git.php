@@ -392,7 +392,7 @@
                           foreach($git_projects as $git_project){ 
                             $git_project = trim($git_project);
                             if(empty($git_project)){ continue;}
-                            $git_project_text = preg_replace('/^'.$prev_git_project.'/', '&nbsp;&nbsp; - ', $git_project); ?>
+                            $git_project_text = preg_replace('/^'.$prev_git_project.'\//', '&nbsp;&nbsp; - /', $git_project); ?>
                     <option value="<?php echo $git_project; ?>" ><?php echo $git_project_text; ?></option>
                     <?php $prev_git_project = str_replace("/", "\/", $git_project); } ?>
                 </select>
