@@ -711,7 +711,7 @@
 		
 			$('.dropdown-menu').on('click', 'a', function(e){			
 				e.preventDefault();
-				$('#custom_command').val($(this).html());
+				$('#custom_command').val($(this).html()).focus();
 			});
 			
             $('#output').on('change', function(){
