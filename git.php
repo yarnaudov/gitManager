@@ -11,7 +11,7 @@
     }
 
     # get all git projects
-    if(@$_SESSION['logged_in'] == TRUE){
+    if(isset($_SESSION['logged_in']) && $_SESSION['logged_in'] == TRUE){
         $git_projects = shell_exec('find ./ -type d -name ".git";');
         $git_projects = explode("/.git", $git_projects);
     }
@@ -619,7 +619,18 @@
 			var cmd_history = new Array();
 			var current_cmd;
 			var editor = ace.edit('editor');
-			editor.setTheme('ace/theme/monokai');			
+			editor.setTheme('ace/theme/monokai');
+			editor.commands.addCommand({
+                name: 'save',
+                bindKey: {
+                    win: 'Ctrl-S',
+                    mac: 'Command-S',
+                    sender: 'editor|cli'
+                },
+                exec: function(env, args, request) {
+                    $('#saveFileBtn').trigger('click');
+                }
+            });
 			$('#exec_custom_command').on('click', function(){
 				
 				var cmd = $('#custom_command').val();
