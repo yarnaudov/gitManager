@@ -14,6 +14,30 @@
     if(isset($_SESSION['logged_in']) && $_SESSION['logged_in'] == TRUE){
         $git_projects = shell_exec('find ./ -type d -name ".git";');
         $git_projects = explode("/.git", $git_projects);
+        $git_projects_texts = $git_projects = array_reverse($git_projects);
+		$used_keys = array();
+		
+		foreach($git_projects as $key1 => $git_project1){
+			$git_projects[$key1] = $git_project1 = trim($git_project1);
+			if(empty($git_project1)){unset($git_projects[$key1]);continue;}
+			$git_project1 = str_replace('/', '\/', $git_project1);
+			foreach($git_projects as $key2 => $git_project2){
+				$git_project2 = trim($git_project2);
+				if(empty($git_project2)){unset($git_projects[$key2]);continue;}
+				if(!in_array($key2, $used_keys) && preg_match('/'.$git_project1.'\//', $git_project2)){
+					$nbsp = count(explode('/', $git_project1));
+					$nbsp_str = '';
+					for($i = 0; $i <= $nbsp; $i++){
+						$nbsp_str .= '&nbsp;';
+					}
+					$git_projects_texts[$key2] = preg_replace('/'.$git_project1.'\//', $nbsp_str.'-&nbsp;/', $git_project2);
+					$used_keys[] = $key2;
+				}
+			}
+		}
+		
+		$git_projects = array_reverse($git_projects);
+		$git_projects_texts = array_reverse($git_projects_texts);
     }
 
     # login user
@@ -388,13 +412,9 @@
 
             <div id="repo_list">
                 <select id="projects" size="10" >
-                    <?php $prev_git_project = '###none###';
-                          foreach($git_projects as $git_project){ 
-                            $git_project = trim($git_project);
-                            if(empty($git_project)){ continue;}
-                            $git_project_text = preg_replace('/^'.$prev_git_project.'\//', '&nbsp;&nbsp; - /', $git_project); ?>
-                    <option value="<?php echo $git_project; ?>" ><?php echo $git_project_text; ?></option>
-                    <?php $prev_git_project = str_replace("/", "\/", $git_project); } ?>
+                    <?php foreach($git_projects as $key => $git_project){  ?>
+                    <option value="<?php echo $git_project; ?>" ><?php echo $git_projects_texts[$key]; ?></option>
+                    <?php } ?>
                 </select>
                 <label>Git repositories</label>
             </div>
