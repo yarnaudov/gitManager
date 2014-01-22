@@ -64,7 +64,7 @@
 
                 $cmd = 'git clone '.$_REQUEST['repo_url'].' '.$_REQUEST['repo_name'].' 2>&1;';
                 echo date('Y-m-d H:i:s')." - ".$cmd."<br/>";
-                echo date('Y-m-d H:i:s')." - ".nl2br(shell_exec($cmd));
+                echo date('Y-m-d H:i:s')." - ".nl2br(trim(shell_exec($cmd)))."<br/>";;
                 echo date('Y-m-d H:i:s')." - "."end command<br/><br/>";
 
             break;
@@ -79,7 +79,7 @@
 					
                 $cmd = 'git branch -a 2>&1;';
 
-                $branches = shell_exec($cd.$cmd );
+                $branches = trim(shell_exec($cd.$cmd));
 		        
                 $repo_data['output']  = date('Y-m-d H:i:s')." - ".$cmd."<br/>";
                 //$repo_data['output'] .= date('Y-m-d H:i:s')." - ".$branches."<br/>";
@@ -88,11 +88,11 @@
 
                 $repo_data['info_branches'] = nl2br($branches)."<br/>";
 
-                $repo_info = shell_exec($cd.'git remote show origin 2>&1;');
+                $repo_info = trim(shell_exec($cd.'git remote show origin 2>&1;'));
                 $repo_data['info'] = nl2br($repo_info)."<br/>";
 
                 $repo_data['output'] .= date('Y-m-d H:i:s')." - git remote show origin<br/>";
-                $repo_data['output'] .= date('Y-m-d H:i:s')." - ".nl2br($repo_info);
+                $repo_data['output'] .= date('Y-m-d H:i:s')." - ".nl2br($repo_info)."<br/>";;
                 $repo_data['output'] .= date('Y-m-d H:i:s')." - "."done<br/><br/>";
 
                 echo json_encode($repo_data);
@@ -109,7 +109,7 @@
                 $cmd = 'git pull origin '.$branch.' 2>&1;';
 
                 echo date('Y-m-d H:i:s')." - ".$cmd."<br/>";
-                echo date('Y-m-d H:i:s')." - ".nl2br(shell_exec($cd.$cmd ));
+                echo date('Y-m-d H:i:s')." - ".nl2br(trim(shell_exec($cd.$cmd)))."<br/>";
                 echo date('Y-m-d H:i:s')." - "."end command<br/><br/>"; 
 
             break;
@@ -148,7 +148,7 @@
                 $output = trim(shell_exec($cd.$cmd));
 
                 if(!empty($output)){
-                    echo date('Y-m-d H:i:s')." - ".nl2br($output);
+                    echo date('Y-m-d H:i:s')." - ".nl2br($output)."<br/>";;
                 }
 
                 echo date('Y-m-d H:i:s')." - "."end command<br/><br/>";
@@ -162,7 +162,7 @@
                 $cmd = 'git fetch 2>&1;';
 
                 echo date('Y-m-d H:i:s')." - ".$cmd."<br/>";
-                echo date('Y-m-d H:i:s')." - ".nl2br(shell_exec($cd.$cmd ));
+                echo date('Y-m-d H:i:s')." - ".nl2br(trim(shell_exec($cd.$cmd)))."<br/>";;
                 echo date('Y-m-d H:i:s')." - "."end command<br/><br/>"; 
 
             break;
@@ -198,9 +198,9 @@
 				else{
                     $cmd = $cmd." 2>&1;";
 					echo date('Y-m-d H:i:s')." - ".$cmd."<br/>";
-					$cmd_output = shell_exec($cd.$cmd);
+					$cmd_output = trim(shell_exec($cd.$cmd));
 					if($cmd_output){
-						echo date('Y-m-d H:i:s')." - ".nl2br($cmd_output);
+						echo date('Y-m-d H:i:s')." - ".nl2br($cmd_output)."<br/>";
 					}
 					echo date('Y-m-d H:i:s')." - "."end command<br/><br/>"; 
 				}
@@ -860,4 +860,3 @@
     </body>
 
 </html>
-
