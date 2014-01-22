@@ -364,6 +364,22 @@
 				cursor: pointer;
 			}
 
+            #opened_files{
+                float: right;
+                min-width: 300px;
+                max-width: 800px;
+            }
+            #opened_files ul{
+                display: inline-block;
+                margin: 0;
+                padding: 0;
+            }
+            #opened_files li{
+                list-style: none;
+                display: inline-block;
+                margin-right: 10px;
+            }
+
         </style>
 
     </head>
@@ -488,6 +504,10 @@
     				<input class="input-xxlarge" id="custom_command" type="text" >		
 					<button class="btn btn-small" type="button" id="exec_custom_command" >Exec</button>
 				</div>
+                <div id="opened_files" >
+                    <span>Opened files:</span>
+                    <ul></ul>
+                </div>
 			</div>
         </div>
 
@@ -498,7 +518,7 @@
             // automaticaly resize output conteiner
             $(window).on('resize load', function() {
 
-                $('div[id^=ModalEditFile][aria-hidden=false]').each(function(){
+                $('div[id^=ModalEditFile_][aria-hidden=false]').each(function(){
 				    setFullScreenModal($(this).attr('id'));
                 });
 			
@@ -700,7 +720,8 @@
                         if(mode == 'js'){ mode = 'javascript'; }                        
                         editors[editor_id].getSession().setMode('ace/mode/'+mode);
                         
-						setFullScreenModal(modal_id);	
+						setFullScreenModal(modal_id);
+                        createFileTabs();
 
 					
 					}catch(err){
@@ -767,8 +788,6 @@
             });
 			
             function createAceEditor(editor_id){
-
-                console.log('Create editor #'+editor_id);
                 
                 var editor = ace.edit(editor_id);
                 editor.setTheme('ace/theme/monokai');
@@ -793,6 +812,20 @@
 				$('#'+modal_id+' .modal-body').css('height', '100%').css('max-height', '100%');
 				$('#'+modal_id+' .modal-body').height($('#'+modal_id).height()-$('#'+modal_id+' .modal-header').height()-$('#'+modal_id+' .modal-footer').height()-80);
 			}
+
+            function createFileTabs(){
+
+                $('#opened_files ul').html('');
+                $('div[id^=ModalEditFile_]').each(function(){
+                    
+                    var full_file_name = $(this).find('.file_name').html();
+                    var file = full_file_name.split('/');
+                    var short_file_name = file[file.length-1]
+
+                    $('#opened_files ul').append('<li><a href="#'+$(this).attr('id')+'" data-toggle="modal" title="'+full_file_name+'" >'+short_file_name+'</a></li>');
+                });
+
+            }
 			
 			function getCookie(c_name){
 			
@@ -827,3 +860,4 @@
     </body>
 
 </html>
+
