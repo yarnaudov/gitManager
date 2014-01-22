@@ -62,10 +62,10 @@
             #create repository
             case 'create_repo':
 
-                $cmd = 'git clone '.$_REQUEST['repo_url'].' '.$_REQUEST['repo_name'];
+                $cmd = 'git clone '.$_REQUEST['repo_url'].' '.$_REQUEST['repo_name'].' 2>&1;';
                 echo date('Y-m-d H:i:s')." - ".$cmd."<br/>";
                 echo date('Y-m-d H:i:s')." - ".nl2br(shell_exec($cmd));
-                echo date('Y-m-d H:i:s')." - "."done<br/><br/>";
+                echo date('Y-m-d H:i:s')." - "."end command<br/><br/>";
 
             break;
 
@@ -77,19 +77,19 @@
                 $pwd = shell_exec($cd.'pwd;');
 				setcookie('path', trim($pwd));
 					
-                $cmd = 'git branch -a;';
+                $cmd = 'git branch -a 2>&1;';
 
                 $branches = shell_exec($cd.$cmd );
-
-                $repo_data['output'] .= date('Y-m-d H:i:s')." - ".$cmd."<br/>";
-                $repo_data['output'] .= date('Y-m-d H:i:s')." - ".$branches."<br/>";
+		        
+                $repo_data['output']  = date('Y-m-d H:i:s')." - ".$cmd."<br/>";
+                //$repo_data['output'] .= date('Y-m-d H:i:s')." - ".$branches."<br/>";
 
                 $repo_data['branches'] = explode("\n", $branches);
 
                 $repo_data['info_branches'] = nl2br($branches)."<br/>";
 
-                $repo_info = shell_exec($cd.'git remote show origin');
-                $repo_data['info'] .= nl2br($repo_info)."<br/>";
+                $repo_info = shell_exec($cd.'git remote show origin 2>&1;');
+                $repo_data['info'] = nl2br($repo_info)."<br/>";
 
                 $repo_data['output'] .= date('Y-m-d H:i:s')." - git remote show origin<br/>";
                 $repo_data['output'] .= date('Y-m-d H:i:s')." - ".nl2br($repo_info);
@@ -106,13 +106,11 @@
 
                 $branch = end(explode('/', trim($_REQUEST['branch'])));
 
-                //echo $branch." - branch <br/>\n";
-
-                $cmd = 'git pull origin '.$branch.';';
+                $cmd = 'git pull origin '.$branch.' 2>&1;';
 
                 echo date('Y-m-d H:i:s')." - ".$cmd."<br/>";
                 echo date('Y-m-d H:i:s')." - ".nl2br(shell_exec($cd.$cmd ));
-                echo date('Y-m-d H:i:s')." - "."done<br/><br/>"; 
+                echo date('Y-m-d H:i:s')." - "."end command<br/><br/>"; 
 
             break;
 
@@ -123,7 +121,7 @@
 
                 $branch = end(explode('/', trim($_REQUEST['branch'])));
 
-                $cmd = 'git branch;';
+                $cmd = 'git branch 2>&1;';
                 $branches = shell_exec($cd.$cmd );
                 $branches = explode("\n", $branches);
                 foreach($branches as $k => $v){
@@ -139,10 +137,10 @@
                 }
 
                 if(in_array($branch, $branches)){
-                    $cmd = 'git checkout '.$branch.';';
+                    $cmd = 'git checkout '.$branch.' 2>&1;';
                 }
                 else{
-                    $cmd = 'git checkout -b '.$branch.';';
+                    $cmd = 'git checkout -b '.$branch.' 2>&1;';
                 }
 
                 echo date('Y-m-d H:i:s')." - ".$cmd."<br/>";
@@ -153,7 +151,7 @@
                     echo date('Y-m-d H:i:s')." - ".nl2br($output);
                 }
 
-                echo date('Y-m-d H:i:s')." - "."done<br/><br/>";
+                echo date('Y-m-d H:i:s')." - "."end command<br/><br/>";
 
             break;
 
@@ -161,11 +159,11 @@
             case 'fetch':
 
                 $cd = 'cd '.$_REQUEST['repo'].';';
-                $cmd = 'git fetch;';
+                $cmd = 'git fetch 2>&1;';
 
                 echo date('Y-m-d H:i:s')." - ".$cmd."<br/>";
                 echo date('Y-m-d H:i:s')." - ".nl2br(shell_exec($cd.$cmd ));
-                echo date('Y-m-d H:i:s')." - "."done<br/><br/>"; 
+                echo date('Y-m-d H:i:s')." - "."end command<br/><br/>"; 
 
             break;
 			
@@ -198,12 +196,13 @@
 					echo json_encode($file);
 				}
 				else{
+                    $cmd = $cmd." 2>&1;";
 					echo date('Y-m-d H:i:s')." - ".$cmd."<br/>";
 					$cmd_output = shell_exec($cd.$cmd);
 					if($cmd_output){
 						echo date('Y-m-d H:i:s')." - ".nl2br($cmd_output);
 					}
-					echo date('Y-m-d H:i:s')." - "."done<br/><br/>"; 
+					echo date('Y-m-d H:i:s')." - "."end command<br/><br/>"; 
 				}
 				
 			break;
@@ -214,7 +213,12 @@
 				$name = $_REQUEST['name'];
 				$data = $_REQUEST['data'];
 				
-				echo file_put_contents($name, $data);
+                if(is_writable($name)){
+				    echo file_put_contents($name, $data);
+                }
+                else{
+                    echo 0;//'You do not have permission to write in this file';
+                }
 			
 			break;
         
@@ -348,7 +352,7 @@
 				height: 600px;
 			}
 
-			#editor { 
+			.editor { 
 				position: absolute;
 				top: 0;
 				right: 0;
@@ -451,17 +455,18 @@
 		<!-- Modal Edit File-->
 		<div id="ModalEditFile" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="Edit file" aria-hidden="true">
             <div class="modal-header">
+                <!--<button type="button" class="minimize" data-minimize="modal" aria-hidden="true">_</button>-->
                 <button type="button" class="close" data-dismiss="modal" aria-hidden="true">x</button>
                 <h3 id="myModalLabel">Edit file</h3>
-				<span id="file_name" ></span>
-				<span id="message" ></span>
+				<span class="file_name" ></span>
+				<span class="message" ></span>
             </div>
             <div class="modal-body">				
-                <div id="editor"></div>
+                <div id="editor" class="editor" ></div>
             </div>
             <div class="modal-footer">
                 <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
-                <button class="btn btn-primary" id="saveFileBtn" >Save</button>
+                <button class="btn btn-primary saveFileBtn" >Save</button>
             </div>
         </div>
 
@@ -493,7 +498,9 @@
             // automaticaly resize output conteiner
             $(window).on('resize load', function() {
 
-				setFullScreenModal();
+                $('div[id^=ModalEditFile][aria-hidden=false]').each(function(){
+				    setFullScreenModal($(this).attr('id'));
+                });
 			
                 var body_height = $(window).height();
 				
@@ -555,7 +562,10 @@
                 $('#repo_info').addClass('loading');
                 $('#repo_info .info_branches').html('Loading please wait...');
 
+                $(this).attr('disabled', 'disabled');
                 $.get('git.php', {action: 'info',repo: repo}, function(data){
+
+                    $('#projects').removeAttr('disabled');
                 
                     $('#repo_info').removeClass('loading');
                     
@@ -638,19 +648,9 @@
 			// exec custom commands
 			var cmd_history = new Array();
 			var current_cmd;
-			var editor = ace.edit('editor');
-			editor.setTheme('ace/theme/monokai');
-			editor.commands.addCommand({
-                name: 'save',
-                bindKey: {
-                    win: 'Ctrl-S',
-                    mac: 'Command-S',
-                    sender: 'editor|cli'
-                },
-                exec: function(env, args, request) {
-                    $('#saveFileBtn').trigger('click');
-                }
-            });
+
+            var editors = {};            
+
 			$('#exec_custom_command').on('click', function(){
 				
 				var cmd = $('#custom_command').val();
@@ -671,23 +671,37 @@
 				current_cmd = -1;
 				
 				$.get('git.php', {action: 'custom_command', repo: repo, command: cmd}, function(data){
-					console.log(data);
+				
 					$('#custom_command').val('');
 					
-					try{		
-						var file = $.parseJSON(data);
-						$('#file_name').html(file['name']);
-						editor.setValue(file['data'], -1);
+					try{
+
+                        var file = $.parseJSON(data);
 						
-						var mode = cmd.split('.');
-						mode = mode[mode.length-1];
-						if(mode == 'js'){ mode = 'javascript'; }
-						
-						editor.getSession().setMode('ace/mode/'+mode);
-						
-						$('#message').html('');
-						$('#ModalEditFile').modal('show');
-						setFullScreenModal();					
+                        var file_modal = $('#ModalEditFile').clone();
+                        var count_file_modals = $('div[id^=ModalEditFile_]').length;
+
+                        var modal_id = 'ModalEditFile_'+count_file_modals;
+                        var editor_id = 'editor_'+count_file_modals;
+
+                        $(file_modal).attr('id', modal_id);
+                        $(file_modal).find('#editor').attr('id', editor_id);
+
+                        $(file_modal).find('.file_name').html(file['name']);
+                        $(file_modal).find('#message').html('');
+
+                        $(file_modal).modal('show');
+                        
+                        editors[editor_id] = createAceEditor(editor_id);
+                        editors[editor_id].setValue(file['data'], -1);
+                        
+                        var mode = cmd.split('.');
+                        mode = mode[mode.length-1];
+                        if(mode == 'js'){ mode = 'javascript'; }                        
+                        editors[editor_id].getSession().setMode('ace/mode/'+mode);
+                        
+						setFullScreenModal(modal_id);	
+
 					
 					}catch(err){
 						$('#output').html($('#output').html()+data).trigger('change');
@@ -699,20 +713,23 @@
 				
 			});
 			
-			$('#saveFileBtn').on('click', function(){
+            $(document).on('click', '.saveFileBtn', function(){
 			
-				var name = $('#file_name').html();
-				var data = editor.getValue();
+                var editor_id = $(this).parents('.modal').find('div[id^=editor]').attr('id');
+
+				var name = $(this).parents('.modal').find('.file_name').html();
+				var data = editors[editor_id].getValue();
 				
-				$('#message').html('');
+                var message = $(this).parents('.modal').find('.message');
+				$(message).html('');
 				
 				$.post('git.php', {action: 'save_file', name: name, data: data}, function(data){
 					
 					if(data > 0){
-						$('#message').html('&nbsp;-&nbsp;<span class="alert-success" >File successfully saved!</span>');					
+						$(message).html('&nbsp;-&nbsp;<span class="alert-success" >File successfully saved!</span>');					
 					}
 					else{
-						$('#message').html('&nbsp;-&nbsp;<span class="alert-error" >File could not be saved!</span>');						
+						$(message).html('&nbsp;-&nbsp;<span class="alert-error" >File could not be saved!</span>');						
 					}
 				});
 				
@@ -749,10 +766,32 @@
                 $(this).scrollTop(1000000);
             });
 			
-			function setFullScreenModal(){
-				$('#ModalEditFile').css('width', '100%').css('height', '100%').css('margin', 0).css('top', 0).css('left', 0);
-				$('#ModalEditFile .modal-body').css('height', '100%').css('max-height', '100%');
-				$('#ModalEditFile .modal-body').height($('#ModalEditFile').height()-$('#ModalEditFile .modal-header').height()-$('#ModalEditFile .modal-footer').height()-80);
+            function createAceEditor(editor_id){
+
+                console.log('Create editor #'+editor_id);
+                
+                var editor = ace.edit(editor_id);
+                editor.setTheme('ace/theme/monokai');
+                editor.commands.addCommand({
+                    name: 'save',
+                    bindKey: {
+                        win: 'Ctrl-S',
+                        mac: 'Command-S',
+                        sender: 'editor|cli'
+                    },
+                    exec: function(env, args, request) {
+                        $('#saveFileBtn').trigger('click');
+                    }
+                });
+
+                return editor;
+
+            }
+
+			function setFullScreenModal(modal_id){
+				$('#'+modal_id).css('width', '100%').css('height', '100%').css('margin', 0).css('top', 0).css('left', 0);
+				$('#'+modal_id+' .modal-body').css('height', '100%').css('max-height', '100%');
+				$('#'+modal_id+' .modal-body').height($('#'+modal_id).height()-$('#'+modal_id+' .modal-header').height()-$('#'+modal_id+' .modal-footer').height()-80);
 			}
 			
 			function getCookie(c_name){
