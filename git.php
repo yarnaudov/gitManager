@@ -63,9 +63,9 @@
             case 'create_repo':
 
                 $cmd = 'git clone '.$_REQUEST['repo_url'].' '.$_REQUEST['repo_name'].' 2>&1;';
-                echo date('Y-m-d H:i:s')." - ".$cmd."<br/>";
-                echo date('Y-m-d H:i:s')." - ".nl2br(trim(shell_exec($cmd)))."<br/>";;
-                echo date('Y-m-d H:i:s')." - "."end command<br/><br/>";
+                echo '<div><span>'.date('H:i:s')."</span><span>".$cmd."</span></div>";
+                echo '<div><span>'.date('H:i:s')."</span>".trim(shell_exec($cmd))."</span></div>";
+                echo '<div class="end_command" ><span>'.date('H:i:s')."</span>end command</span></div>";
 
             break;
 
@@ -81,19 +81,21 @@
 
                 $branches = trim(shell_exec($cd.$cmd));
 		        
-                $repo_data['output']  = date('Y-m-d H:i:s')." - ".$cmd."<br/>";
-                //$repo_data['output'] .= date('Y-m-d H:i:s')." - ".$branches."<br/>";
+                $repo_data['output']  = '<div><span>'.date('H:i:s').'</span><span>'.$cmd.'</span></div>';
+                $repo_data['output'] .= '<div><span>'.date('H:i:s').'</span><span>'.$branches.'</span></div>';
+                $repo_data['output'] .= '<div class="end_command" ><span>'.date('H:i:s').'</span><span>end command</span></div>';
 
                 $repo_data['branches'] = explode("\n", $branches);
 
                 $repo_data['info_branches'] = nl2br($branches)."<br/>";
 
-                $repo_info = trim(shell_exec($cd.'git remote show origin 2>&1;'));
+                $cmd = 'git remote show origin 2>&1;';
+                $repo_info = trim(shell_exec($cd.$cmd));
                 $repo_data['info'] = nl2br($repo_info)."<br/>";
 
-                $repo_data['output'] .= date('Y-m-d H:i:s')." - git remote show origin<br/>";
-                $repo_data['output'] .= date('Y-m-d H:i:s')." - ".nl2br($repo_info)."<br/>";;
-                $repo_data['output'] .= date('Y-m-d H:i:s')." - "."done<br/><br/>";
+                $repo_data['output'] .= '<div><span>'.date('H:i:s').'</span><span>'.$cmd.'</span></div>';
+                $repo_data['output'] .= '<div><span>'.date('H:i:s').'</span><span>'.$repo_info.'</span></div>';
+                $repo_data['output'] .= '<div class="end_command" ><span>'.date('H:i:s').'</span><span>end command</span></div>';
 
                 echo json_encode($repo_data);
 
@@ -108,9 +110,9 @@
 
                 $cmd = 'git pull origin '.$branch.' 2>&1;';
 
-                echo date('Y-m-d H:i:s')." - ".$cmd."<br/>";
-                echo date('Y-m-d H:i:s')." - ".nl2br(trim(shell_exec($cd.$cmd)))."<br/>";
-                echo date('Y-m-d H:i:s')." - "."end command<br/><br/>"; 
+                echo '<div><span>'.date('H:i:s').'</span><span>'.$cmd.'</span></div>';
+                echo '<div><span>'.date('H:i:s').'</span><span>'.trim(shell_exec($cd.$cmd)).'</span></div>';
+                echo '<div class="end_command" ><span>'.date('H:i:s').'</span><span>end command</span></div>';
 
             break;
 
@@ -143,15 +145,13 @@
                     $cmd = 'git checkout -b '.$branch.' 2>&1;';
                 }
 
-                echo date('Y-m-d H:i:s')." - ".$cmd."<br/>";
-
                 $output = trim(shell_exec($cd.$cmd));
 
+                echo '<div><span>'.date('H:i:s').'</span><span>'.$cmd.'</span></div>';
                 if(!empty($output)){
-                    echo date('Y-m-d H:i:s')." - ".nl2br($output)."<br/>";;
+                    echo '<div><span>'.date('H:i:s').'</span><span>'.$output.'</span></div>';
                 }
-
-                echo date('Y-m-d H:i:s')." - "."end command<br/><br/>";
+                echo '<div class="end_command" ><span>'.date('H:i:s').'</span><span>end command</span></div>';
 
             break;
 
@@ -161,9 +161,9 @@
                 $cd = 'cd '.$_REQUEST['repo'].';';
                 $cmd = 'git fetch 2>&1;';
 
-                echo date('Y-m-d H:i:s')." - ".$cmd."<br/>";
-                echo date('Y-m-d H:i:s')." - ".nl2br(trim(shell_exec($cd.$cmd)))."<br/>";;
-                echo date('Y-m-d H:i:s')." - "."end command<br/><br/>"; 
+                echo '<div><span>'.date('H:i:s').'</span><span>'.$cmd.'</span></div>';
+                echo '<div><span>'.date('H:i:s').'</span><span>'.trim(shell_exec($cd.$cmd)).'</span></div>';
+                echo '<div class="end_command" ><span>'.date('H:i:s').'</span><span>end command</span></div>';
 
             break;
 			
@@ -197,12 +197,12 @@
 				}
 				else{
                     $cmd = $cmd." 2>&1;";
-					echo date('Y-m-d H:i:s')." - ".$cmd."<br/>";
+                    echo '<div><span>'.date('H:i:s').'</span><span>'.$cmd.'</span></div>';
 					$cmd_output = trim(shell_exec($cd.$cmd));
 					if($cmd_output){
-						echo date('Y-m-d H:i:s')." - ".nl2br($cmd_output)."<br/>";
+                        echo '<div><span>'.date('H:i:s').'</span><span>'.$cmd_output.'</span></div>';
 					}
-					echo date('Y-m-d H:i:s')." - "."end command<br/><br/>"; 
+					echo '<div class="end_command" ><span>'.date('H:i:s').'</span><span>end command</span></div>'; 
 				}
 				
 			break;
@@ -250,40 +250,58 @@
         <style>
 
             .modal-body{
-                    padding: 15px 35px;
+                padding: 15px 35px;
             }
             #ModalNewRepo{
-                    width: 462px;
+                width: 462px;
             }
             .left{
-                    float: left;
+                float: left;
             }
             .right{
-                    float: right;
+                float: right;
             }
             .page-header{
-                    overflow: auto;
-                    border-bottom: 1px solid #eeeeee;
-                    padding: 0 20px 10px 20px;
+                overflow: auto;
+                border-bottom: 1px solid #eeeeee;
+                padding: 0 20px 10px 20px;
             }
             #output_main{
-                    border-top: 1px solid #aaaaaa;
-                    font-family: 'lucida console';								
-                    position: absolute;
-                    bottom: 0;
-                    width: 100%;
-					background-color: #fff;
+                border-top: 1px solid #aaaaaa;
+                font-family: 'lucida console';								
+                position: absolute;
+                bottom: 0;
+                width: 100%;
+				background-color: #fff;
             }
             #output_main #output{				
-                    height: 300px;
-                    padding: 5px 10px;
-                    color: #666;
-                    overflow-y: auto;
-                    font-size: 12px;
+                height: 300px;
+                padding: 5px 10px;
+                color: #666;
+                overflow-y: auto;
+                font-size: 12px;                
             }
+            #output_main #output div{
+                display: table-row;
+            }
+            #output_main #output div.end_command span{
+                padding-bottom: 10px;
+            }
+            #output_main #output div span{
+                display: table-cell;
+                white-space: pre-wrap;
+            }
+            #output_main #output div span:first-child{
+                border-right: 1px solid #aaa;
+                padding-right: 5px;
+            }
+            #output_main #output div span:last-child{
+                padding-left: 5px;
+            }
+
             #output_main #header{
-                    background-color: #eee;
-                    padding: 2px 10px;
+                background-color: #eee;
+                padding: 2px 10px;
             }
 			#output_main #header .input-append{
 					margin-bottom: 0 !important;
