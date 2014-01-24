@@ -63,9 +63,9 @@
             case 'create_repo':
 
                 $cmd = 'git clone '.$_REQUEST['repo_url'].' '.$_REQUEST['repo_name'].' 2>&1;';
-                echo '<div><span>'.date('H:i:s')."</span><span>".$cmd."</span></div>";
-                echo '<div><span>'.date('H:i:s')."</span>".trim(shell_exec($cmd))."</span></div>";
-                echo '<div class="end_command" ><span>'.date('H:i:s')."</span>end command</span></div>";
+                echo '<div><p>'.date('H:i:s')."</p><p>".$cmd."</p></div>";
+                echo '<div><p>'.date('H:i:s')."</p>".trim(shell_exec($cmd))."</p></div>";
+                echo '<div class="end_command" ><p>'.date('H:i:s')."</p><p>end command</p></div>";
 
             break;
 
@@ -81,9 +81,9 @@
 
                 $branches = trim(shell_exec($cd.$cmd));
 		        
-                $repo_data['output']  = '<div><span>'.date('H:i:s').'</span><span>'.$cmd.'</span></div>';
-                $repo_data['output'] .= '<div><span>'.date('H:i:s').'</span><span>'.$branches.'</span></div>';
-                $repo_data['output'] .= '<div class="end_command" ><span>'.date('H:i:s').'</span><span>end command</span></div>';
+                $repo_data['output']  = '<div><p>'.date('H:i:s').'</p><p>'.$cmd.'</p></div>';
+                $repo_data['output'] .= '<div><p>'.date('H:i:s').'</p><p>'.$branches.'</p></div>';
+                $repo_data['output'] .= '<div class="end_command" ><p>'.date('H:i:s').'</p><p>end command</p></div>';
 
                 $repo_data['branches'] = explode("\n", $branches);
 
@@ -93,9 +93,9 @@
                 $repo_info = trim(shell_exec($cd.$cmd));
                 $repo_data['info'] = nl2br($repo_info)."<br/>";
 
-                $repo_data['output'] .= '<div><span>'.date('H:i:s').'</span><span>'.$cmd.'</span></div>';
-                $repo_data['output'] .= '<div><span>'.date('H:i:s').'</span><span>'.$repo_info.'</span></div>';
-                $repo_data['output'] .= '<div class="end_command" ><span>'.date('H:i:s').'</span><span>end command</span></div>';
+                $repo_data['output'] .= '<div><p>'.date('H:i:s').'</p><p>'.$cmd.'</p></div>';
+                $repo_data['output'] .= '<div><p>'.date('H:i:s').'</p><p>'.$repo_info.'</p></div>';
+                $repo_data['output'] .= '<div class="end_command" ><p>'.date('H:i:s').'</p><p>end command</p></div>';
 
                 echo json_encode($repo_data);
 
@@ -110,9 +110,9 @@
 
                 $cmd = 'git pull origin '.$branch.' 2>&1;';
 
-                echo '<div><span>'.date('H:i:s').'</span><span>'.$cmd.'</span></div>';
-                echo '<div><span>'.date('H:i:s').'</span><span>'.trim(shell_exec($cd.$cmd)).'</span></div>';
-                echo '<div class="end_command" ><span>'.date('H:i:s').'</span><span>end command</span></div>';
+                echo '<div><p>'.date('H:i:s').'</p><p>'.$cmd.'</p></div>';
+                echo '<div><p>'.date('H:i:s').'</p><p>'.trim(shell_exec($cd.$cmd)).'</p></div>';
+                echo '<div class="end_command" ><p>'.date('H:i:s').'</p><p>end command</p></div>';
 
             break;
 
@@ -147,11 +147,11 @@
 
                 $output = trim(shell_exec($cd.$cmd));
 
-                echo '<div><span>'.date('H:i:s').'</span><span>'.$cmd.'</span></div>';
+                echo '<div><p>'.date('H:i:s').'</p><p>'.$cmd.'</p></div>';
                 if(!empty($output)){
-                    echo '<div><span>'.date('H:i:s').'</span><span>'.$output.'</span></div>';
+                    echo '<div><p>'.date('H:i:s').'</p><p>'.$output.'</p></div>';
                 }
-                echo '<div class="end_command" ><span>'.date('H:i:s').'</span><span>end command</span></div>';
+                echo '<div class="end_command" ><p>'.date('H:i:s').'</p><p>end command</p></div>';
 
             break;
 
@@ -161,9 +161,9 @@
                 $cd = 'cd '.$_REQUEST['repo'].';';
                 $cmd = 'git fetch 2>&1;';
 
-                echo '<div><span>'.date('H:i:s').'</span><span>'.$cmd.'</span></div>';
-                echo '<div><span>'.date('H:i:s').'</span><span>'.trim(shell_exec($cd.$cmd)).'</span></div>';
-                echo '<div class="end_command" ><span>'.date('H:i:s').'</span><span>end command</span></div>';
+                echo '<div><p>'.date('H:i:s').'</p><p>'.$cmd.'</p></div>';
+                echo '<div><p>'.date('H:i:s').'</p><p>'.trim(shell_exec($cd.$cmd)).'</p></div>';
+                echo '<div class="end_command" ><p>'.date('H:i:s').'</p><span>end command</p></div>';
 
             break;
 			
@@ -197,12 +197,17 @@
 				}
 				else{
                     $cmd = $cmd." 2>&1;";
-                    echo '<div><span>'.date('H:i:s').'</span><span>'.$cmd.'</span></div>';
+                    echo '<div><p>'.date('H:i:s').'</p><p>'.$cmd.'</p></div>';
 					$cmd_output = trim(shell_exec($cd.$cmd));
 					if($cmd_output){
-                        echo '<div><span>'.date('H:i:s').'</span><span>'.$cmd_output.'</span></div>';
+
+                        $cmd_output = preg_replace('/(d[rwx-]{9}.*\n)/', '<span class="dir" >$1</span>', $cmd_output);
+                        $cmd_output = preg_replace('/(l[rwx-]{9}.*\n)/', '<span class="link" >$1</span>', $cmd_output);
+                        $cmd_output = preg_replace('/(-[rwx-]{9}.*\n)/', '<span class="file" >$1</span>', $cmd_output);
+
+                        echo '<div><p>'.date('H:i:s').'</p><p>'.$cmd_output.'</p></div>';
 					}
-					echo '<div class="end_command" ><span>'.date('H:i:s').'</span><span>end command</span></div>'; 
+					echo '<div class="end_command" ><p>'.date('H:i:s').'</p><p>end command</p></div>'; 
 				}
 				
 			break;
@@ -284,19 +289,28 @@
             #output_main #output div{
                 display: table-row;
             }
-            #output_main #output div.end_command span{
+            #output_main #output div.end_command p{
                 padding-bottom: 10px;
             }
-            #output_main #output div span{
+            #output_main #output div p{
                 display: table-cell;
                 white-space: pre-wrap;
             }
-            #output_main #output div span:first-child{
+            #output_main #output div p:first-child{
                 border-right: 1px solid #aaa;
                 padding-right: 5px;
             }
-            #output_main #output div span:last-child{
+            #output_main #output div p:last-child{
                 padding-left: 5px;
+            }
+            #output_main #output div p span.dir{
+                font-weight: bold;
+            }
+            #output_main #output div p span.link{
+                color: #2266FF;
+            }
+            #output_main #output div p span.file{
+                color: #22AA22;
             }
 
             #output_main #header{
@@ -807,6 +821,12 @@
             $('#output').on('change', function(){
                 $(this).scrollTop(1000000);
             });
+
+            /*
+            $(document).on('click', '#output .dir', function(){   
+
+            });
+            */
 			
             function createAceEditor(editor_id){
                 
