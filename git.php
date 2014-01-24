@@ -579,9 +579,12 @@
                 $.get('git.php', {action: 'create_repo', repo_url: repo_url, repo_name: repo_name}, function(data){
 
                     $('.create_repo').button('reset');
-
                     $('#output').html($('#output').html()+data).trigger('change');
-                    $('#projects').append('<option value="'+repo_name+'" >./'+repo_name+'</option>');
+                    
+                    $.get('git.php', function(data){
+                        var project = $('#projects').val();
+                        $('#projects').html($('#projects', data).html()).val(project);                        
+                    });
 
               	});
 
