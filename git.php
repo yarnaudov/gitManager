@@ -8,6 +8,7 @@
     if(!isset($_REQUEST['action'])){
         $pwd = shell_exec('pwd;');
     	setcookie('path', trim($pwd));
+    	$_COOKIE['path'] = $pwd;
     }
 
     # get all git projects
@@ -180,30 +181,36 @@
 				preg_match('/cd (.*);|cd (.*)/', $cmd, $match);
 				if(isset($match[0])){
 					$match[0] = preg_replace('/;$/', '', $match[0]);
-					$pwd = shell_exec($cd.$match[0].';pwd;');
-					setcookie('path', trim($pwd));
+					$pwd = trim(shell_exec($cd.$match[0].';pwd;'));
+					setcookie('path', $pwd);
+					$_COOKIE['path'] = $pwd;
 				}
 
-				if(preg_match('/(vi |cat |more )/', $cmd)){
+				if(preg_match('/(vi |vim |cat |more |edit )/', $cmd)){
 				
-					$file['name'] = preg_replace('/(cd )/', '', $cd).'/'.preg_replace('/(vi |cat |more |cd )/', '', $cmd);
-					$file['name'] = preg_replace('/;/', '/', $file['name']);
+				    if(preg_match('/(edit )/', $cmd)){
+				        $file['name'] = preg_replace('/(edit )/', '', $cmd);
+				    }
+				    else{
+                        $file['name'] = preg_replace('/(cd )/', '', $cd).'/'.preg_replace('/(vi |vim |cat |more |cd )/', '', $cmd);
+				    }
+				    $file['name'] = preg_replace('/;/', '/', $file['name']);
 					$file['name'] = preg_replace('/(\/\/)/', '/', $file['name']);
 					
-					$cmd = preg_replace('/vi /', 'cat ', $cmd);
+					$cmd = preg_replace('/(vi |vim |edit )/', 'cat ', $cmd);
 					
 					$file['data'] = shell_exec($cd.$cmd);
 					echo json_encode($file);
 				}
 				else{
-                    $cmd = $cmd." 2>&1;";
+                    $cmd = trim($cmd, ';')." 2>&1;";
                     echo '<div><p>'.date('H:i:s').'</p><p>'.$cmd.'</p></div>';
-					$cmd_output = trim(shell_exec($cd.$cmd));
+					$cmd_output = shell_exec($cd.$cmd);
 					if($cmd_output){
-
-                        $cmd_output = preg_replace('/(d[rwx-]{9}.*\n)/', '<span class="dir" >$1</span>', $cmd_output);
-                        $cmd_output = preg_replace('/(l[rwx-]{9}.*\n)/', '<span class="link" >$1</span>', $cmd_output);
-                        $cmd_output = preg_replace('/(-[rwx-]{9}.*\n)/', '<span class="file" >$1</span>', $cmd_output);
+                        
+                        $cmd_output = preg_replace('/(d[rwx-]{9}.*[1-9]{2}:[1-9]{2} )(.*\n)/', '$1<span class="dir" data-path="'.$_COOKIE['path'].'" >$2</span>', $cmd_output);
+                        $cmd_output = preg_replace('/(l[rwx-]{9}.*[1-9]{2}:[1-9]{2} )(.*\n)/', '$1<span class="link" data-path="'.$_COOKIE['path'].'" >$2</span>', $cmd_output);
+                        $cmd_output = preg_replace('/(-[rwx-]{9}.*[1-9]{2}:[1-9]{2} )(.*\n)/', '$1<span class="file" data-path="'.$_COOKIE['path'].'" >$2</span>', $cmd_output);
 
                         echo '<div><p>'.date('H:i:s').'</p><p>'.$cmd_output.'</p></div>';
 					}
@@ -305,12 +312,15 @@
             }
             #output_main #output div p span.dir{
                 font-weight: bold;
+                cursor: pointer;
             }
             #output_main #output div p span.link{
                 color: #2266FF;
+                cursor: pointer;
             }
             #output_main #output div p span.file{
                 color: #22AA22;
+                cursor: pointer;
             }
 
             #output_main #header{
@@ -780,7 +790,7 @@
 				$(message).html('');
 				
 				$.post('git.php', {action: 'save_file', name: name, data: data}, function(data){
-					
+
 					if(data > 0){
 						$(message).html('&nbsp;-&nbsp;<span class="alert-success" >File successfully saved!</span>');					
 					}
@@ -821,12 +831,18 @@
             $('#output').on('change', function(){
                 $(this).scrollTop(1000000);
             });
-
-            /*
-            $(document).on('click', '#output .dir', function(){   
-
+            
+            $(document).on('dblclick', '#output .dir', function(){   
+                var cmd = 'cd '+$(this).data('path')+'/'+$(this).html()+'; ls -l';
+                $('#custom_command').val(cmd);
+                $('#exec_custom_command').trigger('click');
             });
-            */
+			
+			$(document).on('dblclick', '#output .file', function(){   
+                var cmd = 'edit '+$(this).data('path')+'/'+$(this).html();
+                $('#custom_command').val(cmd);
+                $('#exec_custom_command').trigger('click');
+            });
 			
             function createAceEditor(editor_id){
                 
@@ -840,7 +856,7 @@
                         sender: 'editor|cli'
                     },
                     exec: function(env, args, request) {
-                        $('#saveFileBtn').trigger('click');
+                        $('#'+editor_id).parents('.modal').find('.saveFileBtn').trigger('click');
                     }
                 });
 
